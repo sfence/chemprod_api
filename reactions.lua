@@ -1,7 +1,7 @@
 
 local S = chemprod.translator
 
-chemprod.reactions = {
+local reactions = {
   --[[
   {
     inputs = {},
@@ -12,18 +12,18 @@ chemprod.reactions = {
   },
   --]]
   {
-    inputs = {"SO2","O2"},
-    outputs = {"SO3"},
+    inputs = {["SO2"]=2,["O2"]=1},
+    outputs = {["SO3"]=2},
     catalyst = {"Pt"},
     temp_max = 500,
   },
   {
-    inputs = {"SO3"},
-    outputs = {"SO2","O2"},
+    inputs = {["SO3"]=2},
+    outputs = {["SO2"=2],["O2"=1]},
     temp_min = 800,
   },
   {
-    inputs = {"SO3","H2O"},
+    inputs = {["SO3"]=1,["H2O"]=1},
     outputs = {"H2SO4"},
   },
 }
