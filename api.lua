@@ -6,6 +6,24 @@ local Na = 6.022e23 -- pocet molekul v molu
 --local RM2M = WTF*Na 
 local RM2M = 0.012/12.01115
 
+local sub_ignore_keys = {
+    formula = true,
+    name = true,
+    color = true,
+    solid = true,
+    liquid = true,
+    gaseosum = true,
+    M = true,
+    RM = true,
+    Vm = true,
+    Dm3 = true,
+    Hf = true,
+    cm = true,
+    cp = true,
+    reactions = true,
+    precalc_deltaG = true,
+  }
+
 function chemprod.register_substance(modname, substance_def, override)
   if not override then
     if chemprod.substances[substance_def.key] then
@@ -81,6 +99,17 @@ function chemprod.register_substance(modname, substance_def, override)
   
   -- empty array
   substance.reactions = {}
+  
+  -- extra fields
+  for key, value in pairs(substance_def) do
+    if (not sub_ignore_keys[key]) then
+      substance[key] = value
+    end
+  end
+  
+  if substance_def.precalc_deltaG then
+    substance_def.precalc_deltaG(substance)
+  end
   
   chemprod.substances[substance_def.key] = substance
   
