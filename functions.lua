@@ -4,6 +4,42 @@ chemprod.reactions = {}
 
 local R = 8.31446261815324 -- plynova konstanta
 
+function chemprod.calc_deltaG_solid(self, T, p, V)
+  -- G = H - TS
+  V = self["Vm"]
+  
+  local dH_coef = 0
+  for _, coefs in pairs(self.coefs) do
+    dH_coef = dH_coef + coefs.A/(1+math.exp(-(T-coefs.temp)*coefs.B))
+    --print(coefs.temp.." -> "..dH_coef.." exp "..math.exp(-(T-coefs.temp)*coefs.B))
+  end
+  dH_coef = dH_coef*self["dH_coef"]
+  return self["dH0"]+dH_coef*T+self.pV_coef*p*V - self["dS"]*T
+end
+
+function chemprod.calc_deltaG_liquid(self, T, p, V)
+  -- G = H - TS
+  V = self["Vm"]
+  
+  local dH_coef = 0
+  for _, coefs in pairs(self.coefs) do
+    dH_coef = dH_coef + coefs.A/(1+math.exp(-(T-coefs.temp)*coefs.B))
+  end
+  dH_coef = dH_coef*self["dH_coef"]
+  return self["dH0"]+dH_coef*T+self.pV_coef*p*V - self["dS"]*T
+end
+
+function chemprod.calc_deltaG_gas(self, T, p, V)
+  -- G = H - TS
+  V = self["Vm"]
+  
+  local n = 0
+  for _, coefs in pairs(self.coefs) do
+    n = n + coefs.A/(1+math.exp(-(T-coefs.temp)*coefs.B))
+  end
+  return self["dH0"]+n*R*T*math.log(p/10e5) - self["dS"]*T
+end
+
 function chemprod.reactor_volumes(reactor)
   
   local inputs = reactor.substances
