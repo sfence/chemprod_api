@@ -2,7 +2,7 @@
 chemprod.substances = {}
 chemprod.reactions = {}
 
-local R = 1 -- plynova konstanta
+local R = 8.31446261815324 -- plynova konstanta
 
 function chemprod.reactor_volumes(reactor)
   
@@ -168,14 +168,14 @@ function chemprod.calc_reaction(reactor, dtime)
   for key,reaction in pairs(reactions) do
     --print("Reaction "..key)
     -- v =k*...
-    local v = reaction.A * exp(-reaction.Ea/R*temp)
+    local v = reaction.A * (temp^reaction.B) * math.exp(-reaction.Ea/R*temp)
     for input,_ in pairs(reaction.inputs) do
       local X = substances[input]/reactor.V
       v = v * X^reaction.order
     end
     v = v * dtime
     
-    -- effect of mixind ets
+    -- effect of mixing etc
     v = v*1
     
     -- limit speed to prevent consume more then aviable inputs

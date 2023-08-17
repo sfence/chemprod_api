@@ -6,6 +6,8 @@ local Na = 6.022e23 -- pocet molekul v molu
 --local RM2M = WTF*Na 
 local RM2M = 0.012/12.01115
 
+local R = 8.31446261815324 -- plynova konstanta
+
 function chemprod.register_substance(modname, substance_def, override)
   if not override then
     if chemprod.substances[substance_def.key] then
@@ -67,6 +69,15 @@ function chemprod.register_substance(modname, substance_def, override)
     minetest.log("error", "[chemprod] Substance "..substance_def.key.." standard enthalpy of formation (Hf [J/mol]) is not defined.")
     return
   end
+  
+  -- standard Gibbs free energy of formation
+  --[[
+  substance.Gf = substance_def.Gf
+  if not substance.Gf then
+    minetest.log("error", "[chemprod] Substance "..substance_def.key.." standard Gibs free energy of formation (Gf [J/mol]) is not defined.")
+    return
+  end
+  --]]
   
   -- molar heat capacity
   substance.cm = substance_def.cm
@@ -156,15 +167,25 @@ function chemprod.register_reaction(modname, reaction_def, override)
     return
   end
   
+  -- expended frequency factor
+  reaction.B = reaction_def.B
+  if not reaction.B then
+    reaction.B = 0
+  end
+  
   -- activation energy
   reaction.Ea = reaction_def.Ea
   if not reaction.Ea then
-    minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." activation energy (Ea [J/mol]) is not defined.")
-    return
+    if reaction_def["Ea/R"] then
+      reaction.Ea = reaction_def["Ea/R"]*R
+    else
+      minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." activation energy (Ea [J/mol]) is not defined and cannot be calcualted.")
+      return
+    end
   end
   
   -- order of reaction
-  reaction.order = #reaction.inputs
+  reaction.order = reaction_def.order or #reaction.inputs
   
   -- hard temp limits allow (optional)
   reaction.minT = reaction_def.minT
