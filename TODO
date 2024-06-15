@@ -1,0 +1,17 @@
+
+pocitej molovy objem z objemu a mnozstvi molu, vysledkem by mel byt parcialni tlak
+
+pV = nRT
+pVm = RT
+p+(a/Vm^2)*(Vm-b) = RT
+
+
+R - plyn const
+T - teplota
+n - mols
+Vm - molarni objem
+V = objem
+p = tlak
+
+p = nRT/V = RT/Vm
+p = RT/(a/Vm^2)*(Vm-b)

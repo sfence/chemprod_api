@@ -124,6 +124,7 @@ local substances = {
       {A=1,B=1,temp=600},
     },
   },
+  --[[
   {
     key = "gH2O", -- gas H2O
     formula = "H2O",
@@ -136,6 +137,7 @@ local substances = {
     S = 188.825,
     cp = 1864,
   },
+  --]]
   {
     key = "gH2", -- gas H2
     formula = "H2",
@@ -147,6 +149,9 @@ local substances = {
     Gf = 0,
     S = 130.684,
     cp = 28836,
+    
+    eos_a = 1, -- equation of state coeficient
+    eos_b = 0, -- equation of state coeficient
   },
   {
     key = "gO2", -- gas O2
@@ -158,6 +163,9 @@ local substances = {
     Hf = 0,
     Gf = 0,
     cp = 29378,
+    
+    eos_a = 1, -- equation of state coeficient
+    eos_b = 0, -- equation of state coeficient
   },
   {
     key = "gH", -- gas H
@@ -169,19 +177,54 @@ local substances = {
     Hf = 436000/2, -- energy of chemical bound of H2 / 2
     S = 114.713,
     cp = 28836/2,
+    
+    eos_a = 1, -- equation of state coeficient
+    eos_b = 0, -- equation of state coeficient
   },
+  --[[{
+    key = "gO", -- gas O
+    formula = "O",
+    name = "oxygen radical",
+    color = {r=0,g=0,b=0,a=255},
+    gaseosum = true,
+    RM = 1.00794,
+    Hf = , -- energy of chemical bound of H2 / 2
+    S = ,
+    cp = 291002,
+    
+    eos_a = 1, -- equation of state coeficient
+    eos_b = 0, -- equation of state coeficient
+  },--]]
   {
     key = "gOH", -- gas OH
     formula = "OH",
     name = "hydrogen radical",
     color = {r=0,g=0,b=0,a=255},
     gaseosum = true,
-    RM = 1.00794+,
+    RM = 1.00794,
     Hf = 38.99,
     S = -10.75,
     --Gf = ,
     cp = 28836/2,
+    
+    eos_a = 1, -- equation of state coeficient
+    eos_b = 0, -- equation of state coeficient
   },
+  --[[{
+    key = "gHO2", -- gas HO2
+    formula = "HO2",
+    name = "hydroperoxyl radical",
+    color = {r=0,g=0,b=0,a=255},
+    gaseosum = true,
+    RM = ,
+    Hf = ,
+    S = ,
+    --Gf = ,
+    cp = ,
+    
+    eos_a = 1, -- equation of state coeficient
+    eos_b = 0, -- equation of state coeficient
+  },--]]
 }
 
 local modname = minetest.get_current_modname()

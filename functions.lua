@@ -4,6 +4,17 @@ chemprod.reactions = {}
 
 local R = 8.31446261815324 -- plynova konstanta
 
+function chemprod.calc_gas_molarVolume(substance, T, V, n)
+  return V/n
+end
+
+function chemprod.calc_gas_preasure(substance, T, V, n)
+  --p = RT/((a/Vm^2)*(Vm-b))
+  
+  local Vm = V/n
+  return (R*T*Vm^2)/(substance.eos_a*(Vm-substanmce.eos_b))
+end
+
 function chemprod.calc_deltaG_solid(self, T, p, V)
   -- G = H - TS
   V = self["Vm"]
@@ -94,15 +105,15 @@ function chemprod.reactor_update(reactor, dtime)
   
   for input, amount in pairs(inputs) do
     local in_type = input:sub(1,1)
-    local in_V = chemprod.substances[input].Vm*amount
-    
+
     if in_type=="s" then
+      local in_V = chemprod.substances[input].Vm*amount
       Vs = Vs + in_V
       Vf = Vf + in_V*chemprod.substances[input].Vf
     elseif in_type=="l" then
+      local in_V = chemprod.substances[input].Vm*amount
       Vl = Vl + in_V
     elseif in_type=="g" then
-      Vg = Vg + in_V
       gas_amount = gas_amount + amount
     else
       minetest.log("error", "[chemprod] Unknown type of substance.")
@@ -163,6 +174,7 @@ function chemprod.calc_reaction(reactor, dtime)
   -- inputs = {input_key = amount}
   
   local inputs = reactor.substances
+  local temp = reactor.temp
   
   -- normal reactions
   -- melting, boiling reactions
@@ -175,9 +187,12 @@ function chemprod.calc_reaction(reactor, dtime)
   -- look for aviable reactions
   for input, amount in pairs(inputs) do
     substances[input] = amount
-    for _, reaction in pairs(input.reactions) do
+    local substance = chemprod.substances[input]
+    print("Substance "..input..": "..dump(substance))
+    for _, reaction in pairs(substance.reactions) do
       if not checked[reaction] then
         checked[reaction] = true
+        print("Reaction "..reaction.." checking")
         local check_r = chemprod.reactions[reaction]
         if      ((not check_r.minT) or (check_r.minT<temp))
             and ((not check_r.maxT) or (check_r.maxT>temp)) then
@@ -185,6 +200,7 @@ function chemprod.calc_reaction(reactor, dtime)
           local valid = true
           for r_in,_ in pairs(check_r.inputs) do
             if not inputs[r_in] then
+              print("Reaction "..reaction.." input "..r_in.." not found.")
               valid = false
               break
             end
@@ -202,34 +218,46 @@ function chemprod.calc_reaction(reactor, dtime)
   
   -- do aviable reactions
   for key,reaction in pairs(reactions) do
-    --print("Reaction "..key)
+    print("Reaction "..key)
+    print(dump(reaction))
     -- v =k*...
-    local v = reaction.A * (temp^reaction.B) * math.exp(-reaction.Ea/R*temp)
+    local v = reaction.A * (temp^reaction.B) * math.exp(-reaction.Ea/(R*temp))
+    print("v = "..v)
     for input,_ in pairs(reaction.inputs) do
       local X = substances[input]/reactor.V
       v = v * X^reaction.order
     end
-    v = v * dtime
+    v = v * dtime * chemprod.reaction_speed_multiplier
     
     -- effect of mixing etc
     v = v*1
     
+    -- round
+    local rv = math.floor(v)
+    v = v - rv
+    if (v>0) then
+      if v>=math.random() then
+        rv = rv + 1
+      end
+    end
+    
     -- limit speed to prevent consume more then aviable inputs
     for input,amount in pairs(reaction.inputs) do
-      if substances[input]<(amount*v) then
-        v = substances[input]/amount
+      if substances[input]<(amount*rv) then
+        rv = substances[input]/amount
       end
     end
     
     -- remove inputs, add outputs
-    for input,amount in pairs(reaction.inputs) do
-      substances[input] = substances[input] - v*amount
+    if rv>0 then
+      for input,amount in pairs(reaction.inputs) do
+        substances[input] = substances[input] - rv*amount
+      end
+      for output,amount in pairs(reaction.outputs) do
+        outputs[output] = (outputs[output] or 0) + rv*amount
+      end
     end
-    for output,amount in pairs(reaction.outputs) do
-      outputs[output] = (outputs[output] or 0) + v*amount
-    end
-    
-    deltaE = deltaE + amount*reaction.deltaE
+    --deltaE = deltaE + v*reaction.deltaE
   end
   
   -- add substances to outputs
@@ -245,10 +273,16 @@ function chemprod.calc_reaction(reactor, dtime)
     sumCmN = sumCmN + chemprod.substances[output].cm*amount
   end
   
-  local out_temp = reactor.temp + deltaE/sumCmN
+  local out_temp
+  if sumCmN > 0 then
+    out_temp = reactor.temp + deltaE/sumCmN
+  else
+    out_temp = reactor.temp
+  end
   
   return {
       substances = outputs,
       temp = out_temp,
     }
 end
+

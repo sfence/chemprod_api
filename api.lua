@@ -75,6 +75,10 @@ function chemprod.register_substance(modname, substance_def, override)
     if substance_def.Dm3 then
       --substance.Vm = 1/(substance_def.Dm3/substance.M)
       substance.Vm = substance.M/substance_def.Dm3
+    elseif substance_def.eos_a or substance_def.eos_b or substance_def.gaseosum then
+      substance.eos_a = substance_def.eos_a or 1
+      substance.eos_b = substance_def.eos_b or 0
+      substance.Vm = chemprod.calc_gas_molarVolume
     else
       minetest.log("error", "[chemprod] Substance "..substance_def.key.." molar volume (Vm [m^3/mol]) is not defined and cannot be calculated.")
       return
@@ -237,3 +241,4 @@ function chemprod.register_reaction(modname, reaction_def, override)
   
   chemprod.reactions[reaction_def.key] = reaction
 end
+
