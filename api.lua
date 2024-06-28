@@ -26,10 +26,10 @@ local sub_ignore_keys = {
     precalc_deltaG = true,
   }
 
-function chemprod.register_substance(modname, substance_def, override)
+function chemprod_api.register_substance(modname, substance_def, override)
   if not override then
-    if chemprod.substances[substance_def.key] then
-      minetest.log("error", "[chemprod] Substance with key "..substance_def.key.." is already registered.")
+    if chemprod_api.substances[substance_def.key] then
+      minetest.log("error", "[chemprod_api] Substance with key "..substance_def.key.." is already registered.")
       return
     end
   end
@@ -54,7 +54,7 @@ function chemprod.register_substance(modname, substance_def, override)
     substance.gaseosum = true
   end
   if n~=1 then
-    minetest.log("error", "[chemprod] Substance "..substance_def.key.." missing/multi state of matter definition.")
+    minetest.log("error", "[chemprod_api] Substance "..substance_def.key.." missing/multi state of matter definition.")
     return
   end
   
@@ -64,7 +64,7 @@ function chemprod.register_substance(modname, substance_def, override)
     if substance_def.RM then
       substance.M = substance_def.RM*RM2M
     else
-      minetest.log("error", "[chemprod] Substance "..substance_def.key.." molar mass (M [kg/mol]) is not defined and cannot be calculated.")
+      minetest.log("error", "[chemprod_api] Substance "..substance_def.key.." molar mass (M [kg/mol]) is not defined and cannot be calculated.")
       return
     end
   end
@@ -78,9 +78,9 @@ function chemprod.register_substance(modname, substance_def, override)
     elseif substance_def.eos_a or substance_def.eos_b or substance_def.gaseosum then
       substance.eos_a = substance_def.eos_a or 1
       substance.eos_b = substance_def.eos_b or 0
-      substance.Vm = chemprod.calc_gas_molarVolume
+      substance.Vm = chemprod_api.calc_gas_molarVolume
     else
-      minetest.log("error", "[chemprod] Substance "..substance_def.key.." molar volume (Vm [m^3/mol]) is not defined and cannot be calculated.")
+      minetest.log("error", "[chemprod_api] Substance "..substance_def.key.." molar volume (Vm [m^3/mol]) is not defined and cannot be calculated.")
       return
     end
   end
@@ -88,7 +88,7 @@ function chemprod.register_substance(modname, substance_def, override)
   -- standard enthalpy of formation
   substance.Hf = substance_def.Hf
   if not substance.Hf then
-    minetest.log("error", "[chemprod] Substance "..substance_def.key.." standard enthalpy of formation (Hf [J/mol]) is not defined.")
+    minetest.log("error", "[chemprod_api] Substance "..substance_def.key.." standard enthalpy of formation (Hf [J/mol]) is not defined.")
     return
   end
   
@@ -96,7 +96,7 @@ function chemprod.register_substance(modname, substance_def, override)
   --[[
   substance.Gf = substance_def.Gf
   if not substance.Gf then
-    minetest.log("error", "[chemprod] Substance "..substance_def.key.." standard Gibs free energy of formation (Gf [J/mol]) is not defined.")
+    minetest.log("error", "[chemprod_api] Substance "..substance_def.key.." standard Gibs free energy of formation (Gf [J/mol]) is not defined.")
     return
   end
   --]]
@@ -107,7 +107,7 @@ function chemprod.register_substance(modname, substance_def, override)
     if substance_def.cp then
       substance.cm = substance_def.cp/substance.M
     else
-      minetest.log("error", "[chemprod] Substance "..substance_def.key.." molar heat capacity (cm [J/mol/K]) is not defined and cannot be calculated.")
+      minetest.log("error", "[chemprod_api] Substance "..substance_def.key.." molar heat capacity (cm [J/mol/K]) is not defined and cannot be calculated.")
       return
     end
   end
@@ -126,7 +126,7 @@ function chemprod.register_substance(modname, substance_def, override)
     substance_def.precalc_deltaG(substance)
   end
   
-  chemprod.substances[substance_def.key] = substance
+  chemprod_api.substances[substance_def.key] = substance
   
   minetest.log("warning", "Added substance: "..dump(substance))
   
@@ -142,17 +142,17 @@ function chemprod.register_substance(modname, substance_def, override)
         
         inventory_image = modname.."_"..substance_def.formula..".png",
         
-        _chemprod = {
+        _chemprod_api = {
           formula = substance_def.formula,
         },
       })
   end
 end
 
-function chemprod.register_reaction(modname, reaction_def, override)
+function chemprod_api.register_reaction(modname, reaction_def, override)
   if not override then
-    if chemprod.reactions[reaction_def.key] then
-      minetest.log("error", "[chemprod] Reaction with key "..reaction_def.key.." is already registered.")
+    if chemprod_api.reactions[reaction_def.key] then
+      minetest.log("error", "[chemprod_api] Reaction with key "..reaction_def.key.." is already registered.")
       return
     end
   end
@@ -161,16 +161,16 @@ function chemprod.register_reaction(modname, reaction_def, override)
   
   -- inputs
   if not reaction_def.inputs then
-    minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." inputs is not defined.")
+    minetest.log("error", "[chemprod_api] Reaction "..reaction_def.key.." inputs is not defined.")
     return
   end
   for input, amount in pairs(reaction_def.inputs) do
-    if not chemprod.substances[input] then
-      minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." input "..input.." is not defined.")
+    if not chemprod_api.substances[input] then
+      minetest.log("error", "[chemprod_api] Reaction "..reaction_def.key.." input "..input.." is not defined.")
       return
     end
     if amount<=0 then
-      minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." input "..input.." has bad amount.")
+      minetest.log("error", "[chemprod_api] Reaction "..reaction_def.key.." input "..input.." has bad amount.")
       return
     end
   end
@@ -178,16 +178,16 @@ function chemprod.register_reaction(modname, reaction_def, override)
   
   -- outputs
   if not reaction_def.outputs then
-    minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." outputs is not defined.")
+    minetest.log("error", "[chemprod_api] Reaction "..reaction_def.key.." outputs is not defined.")
     return
   end
   for output, amount in pairs(reaction_def.outputs) do
-    if not chemprod.substances[output] then
-      minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." output "..output.." is not defined.")
+    if not chemprod_api.substances[output] then
+      minetest.log("error", "[chemprod_api] Reaction "..reaction_def.key.." output "..output.." is not defined.")
       return
     end
     if amount<=0 then
-      minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." output "..output.." has bad amount.")
+      minetest.log("error", "[chemprod_api] Reaction "..reaction_def.key.." output "..output.." has bad amount.")
       return
     end
   end
@@ -196,7 +196,7 @@ function chemprod.register_reaction(modname, reaction_def, override)
   -- frequency factor
   reaction.A = reaction_def.A
   if not reaction.A then
-    minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." frequency factor is not defined.")
+    minetest.log("error", "[chemprod_api] Reaction "..reaction_def.key.." frequency factor is not defined.")
     return
   end
   
@@ -212,7 +212,7 @@ function chemprod.register_reaction(modname, reaction_def, override)
     if reaction_def["Ea/R"] then
       reaction.Ea = reaction_def["Ea/R"]*R
     else
-      minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." activation energy (Ea [J/mol]) is not defined and cannot be calcualted.")
+      minetest.log("error", "[chemprod_api] Reaction "..reaction_def.key.." activation energy (Ea [J/mol]) is not defined and cannot be calcualted.")
       return
     end
   end
@@ -229,16 +229,16 @@ function chemprod.register_reaction(modname, reaction_def, override)
   
   --if (reaction.tempV~=nil) then
   --  if (not reaction.minT) or (not reaction.maxT) then
-  --    minetest.log("error", "[chemprod] Reaction "..reaction_def.key.." definition required minT and maxT, when tempV is used.")
+  --    minetest.log("error", "[chemprod_api] Reaction "..reaction_def.key.." definition required minT and maxT, when tempV is used.")
   --    return
   --  end
   --end
   
   -- add info to substances
   for input,_ in pairs(reaction_def.inputs) do
-    table.insert(chemprod.substances[input].reactions, reaction_def.key)
+    table.insert(chemprod_api.substances[input].reactions, reaction_def.key)
   end
   
-  chemprod.reactions[reaction_def.key] = reaction
+  chemprod_api.reactions[reaction_def.key] = reaction
 end
 

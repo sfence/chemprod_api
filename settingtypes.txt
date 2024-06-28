@@ -1,5 +1,5 @@
 
 # reaction speed constant
 
-chemprod_reaction_speed_multiplier (Reaction speed multiplier) int 72 1 1000000
+chemprod_api_reaction_speed_multiplier (Reaction speed multiplier) int 72 1 1000000
 

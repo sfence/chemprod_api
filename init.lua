@@ -1,6 +1,6 @@
 
-chemprod = {
-  translator = minetest.get_translator("chemprod")
+chemprod_api = {
+  translator = minetest.get_translator("chemprod_api")
 }
 
 local modname = minetest.get_current_modname()
@@ -10,9 +10,4 @@ dofile(modpath.."/settings.lua")
 
 dofile(modpath.."/functions.lua")
 dofile(modpath.."/api.lua")
-
-dofile(modpath.."/substances.lua")
-dofile(modpath.."/reactions.lua")
-
-dofile(modpath.."/reactors/reactors.lua")
 

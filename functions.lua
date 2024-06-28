@@ -1,21 +1,21 @@
 
-chemprod.substances = {}
-chemprod.reactions = {}
+chemprod_api.substances = {}
+chemprod_api.reactions = {}
 
 local R = 8.31446261815324 -- plynova konstanta
 
-function chemprod.calc_gas_molarVolume(substance, T, V, n)
+function chemprod_api.calc_gas_molarVolume(substance, T, V, n)
   return V/n
 end
 
-function chemprod.calc_gas_preasure(substance, T, V, n)
+function chemprod_api.calc_gas_preasure(substance, T, V, n)
   --p = RT/((a/Vm^2)*(Vm-b))
   
   local Vm = V/n
   return (R*T*Vm^2)/(substance.eos_a*(Vm-substanmce.eos_b))
 end
 
-function chemprod.calc_deltaG_solid(self, T, p, V)
+function chemprod_api.calc_deltaG_solid(self, T, p, V)
   -- G = H - TS
   V = self["Vm"]
   
@@ -28,7 +28,7 @@ function chemprod.calc_deltaG_solid(self, T, p, V)
   return self["dH0"]+dH_coef*T+self.pV_coef*p*V - self["dS"]*T
 end
 
-function chemprod.calc_deltaG_liquid(self, T, p, V)
+function chemprod_api.calc_deltaG_liquid(self, T, p, V)
   -- G = H - TS
   V = self["Vm"]
   
@@ -40,7 +40,7 @@ function chemprod.calc_deltaG_liquid(self, T, p, V)
   return self["dH0"]+dH_coef*T+self.pV_coef*p*V - self["dS"]*T
 end
 
-function chemprod.calc_deltaG_gas(self, T, p, V)
+function chemprod_api.calc_deltaG_gas(self, T, p, V)
   -- G = H - TS
   V = self["Vm"]
   
@@ -51,7 +51,7 @@ function chemprod.calc_deltaG_gas(self, T, p, V)
   return self["dH0"]+n*R*T*math.log(p/10e5) - self["dS"]*T
 end
 
-function chemprod.reactor_volumes(reactor)
+function chemprod_api.reactor_volumes(reactor)
   
   local inputs = reactor.substances
   
@@ -62,18 +62,18 @@ function chemprod.reactor_volumes(reactor)
   local Vg = 0
   
   for input, amount in pairs(inputs) do
-    local check = chemprod.substances[input]
+    local check = chemprod_api.substances[input]
     local in_V = check.Vm*amount
     
     if check.solid then
       Vs = Vs + in_V
-      Vf = Vf + in_V*chemprod.substances[input].Vf
+      Vf = Vf + in_V*chemprod_api.substances[input].Vf
     elseif check.liquid then
       Vl = Vl + in_V
     elseif check.gaseosum then
       Vg = Vg + in_V
     else
-      minetest.log("error", "[chemprod] Unknown type of substance.")
+      minetest.log("error", "[chemprod_api] Unknown type of substance.")
     end
   end
   
@@ -90,11 +90,11 @@ function chemprod.reactor_volumes(reactor)
   reactor.Vg = reactor.V - Vs - Vl + Vsl + Vsg
   
   if (reactor.Vg<=0) and (Vg>0) then
-    minetest.log("error", "[chemprod] Bad gas volume.")
+    minetest.log("error", "[chemprod_api] Bad gas volume.")
   end
 end
 
-function chemprod.reactor_update(reactor, dtime)
+function chemprod_api.reactor_update(reactor, dtime)
   local inputs = reactor.substances
   
   local Vs = 0
@@ -107,16 +107,16 @@ function chemprod.reactor_update(reactor, dtime)
     local in_type = input:sub(1,1)
 
     if in_type=="s" then
-      local in_V = chemprod.substances[input].Vm*amount
+      local in_V = chemprod_api.substances[input].Vm*amount
       Vs = Vs + in_V
-      Vf = Vf + in_V*chemprod.substances[input].Vf
+      Vf = Vf + in_V*chemprod_api.substances[input].Vf
     elseif in_type=="l" then
-      local in_V = chemprod.substances[input].Vm*amount
+      local in_V = chemprod_api.substances[input].Vm*amount
       Vl = Vl + in_V
     elseif in_type=="g" then
       gas_amount = gas_amount + amount
     else
-      minetest.log("error", "[chemprod] Unknown type of substance.")
+      minetest.log("error", "[chemprod_api] Unknown type of substance.")
     end
   end
   
@@ -170,7 +170,7 @@ function chemprod.reactor_update(reactor, dtime)
   end
 end
 
-function chemprod.calc_reaction(reactor, dtime)
+function chemprod_api.calc_reaction(reactor, dtime)
   -- inputs = {input_key = amount}
   
   local inputs = reactor.substances
@@ -187,13 +187,13 @@ function chemprod.calc_reaction(reactor, dtime)
   -- look for aviable reactions
   for input, amount in pairs(inputs) do
     substances[input] = amount
-    local substance = chemprod.substances[input]
+    local substance = chemprod_api.substances[input]
     print("Substance "..input..": "..dump(substance))
     for _, reaction in pairs(substance.reactions) do
       if not checked[reaction] then
         checked[reaction] = true
         print("Reaction "..reaction.." checking")
-        local check_r = chemprod.reactions[reaction]
+        local check_r = chemprod_api.reactions[reaction]
         if      ((not check_r.minT) or (check_r.minT<temp))
             and ((not check_r.maxT) or (check_r.maxT>temp)) then
           -- check if all inputs is aviable
@@ -227,7 +227,7 @@ function chemprod.calc_reaction(reactor, dtime)
       local X = substances[input]/reactor.V
       v = v * X^reaction.order
     end
-    v = v * dtime * chemprod.reaction_speed_multiplier
+    v = v * dtime * chemprod_api.reaction_speed_multiplier
     
     -- effect of mixing etc
     v = v*1
@@ -270,7 +270,7 @@ function chemprod.calc_reaction(reactor, dtime)
   -- deltaT = deltaE/sum(cm*n)
   local sumCmN = 0
   for output, amount in pairs(outputs) do
-    sumCmN = sumCmN + chemprod.substances[output].cm*amount
+    sumCmN = sumCmN + chemprod_api.substances[output].cm*amount
   end
   
   local out_temp
